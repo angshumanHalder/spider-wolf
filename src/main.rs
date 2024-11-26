@@ -1,7 +1,7 @@
 #![warn(clippy::all, clippy::pedantic)]
-use editor::Editor;
-
 mod editor;
+
+use editor::Editor;
 
 fn main() {
     Editor::default().run();
