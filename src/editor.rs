@@ -7,7 +7,7 @@ use crossterm::event::{
     KeyCode::Char,
     KeyEvent, KeyModifiers,
 };
-use terminal::Terminal;
+use terminal::{Position, Size, Terminal};
 
 pub struct Editor {
     should_quit: bool,
@@ -52,22 +52,26 @@ impl Editor {
     }
 
     fn refresh_screen(&self) -> Result<(), Error> {
+        Terminal::hide_cursor()?;
         if self.should_quit {
             Terminal::clear_screen()?;
-            println!("Goodbye\r\n");
+            Terminal::print("Goodbye\r\n")?;
         } else {
             Self::draw_rows()?;
-            Terminal::move_cursor_to(0, 0)?;
+            Terminal::move_cursor_to(Position { x: 0, y: 0 })?;
         }
+        Terminal::show_cursor()?;
+        Terminal::execute()?;
         Ok(())
     }
 
     fn draw_rows() -> Result<(), Error> {
-        let height = Terminal::size()?.1;
+        let Size { height, .. } = Terminal::size()?;
         for curr_row in 0..height {
-            print!("~");
+            Terminal::clear_line()?;
+            Terminal::print("~")?;
             if curr_row + 1 < height {
-                print!("\r\n");
+                Terminal::print("\r\n")?;
             }
         }
         Ok(())

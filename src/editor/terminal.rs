@@ -1,35 +1,78 @@
-use std::io::stdout;
+use std::io::{stdout, Error, Write};
 
 use crossterm::{
-    cursor::MoveTo,
-    execute,
+    cursor::{Hide, MoveTo, Show},
+    queue,
+    style::Print,
     terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
 };
 
-pub struct Terminal {}
+pub struct Terminal;
+
+#[derive(Clone, Copy)]
+pub struct Position {
+    pub x: u16,
+    pub y: u16,
+}
+
+#[derive(Clone, Copy)]
+pub struct Size {
+    pub width: u16,
+    pub height: u16,
+}
 
 impl Terminal {
-    pub fn terminate() -> Result<(), std::io::Error> {
-        disable_raw_mode()
-    }
-
-    pub fn initialize() -> Result<(), std::io::Error> {
-        enable_raw_mode()?;
-        Self::clear_screen()?;
-        Self::move_cursor_to(0, 0)?;
+    pub fn terminate() -> Result<(), Error> {
+        Self::execute()?;
+        disable_raw_mode()?;
         Ok(())
     }
 
-    pub fn clear_screen() -> Result<(), std::io::Error> {
-        let mut stdout = stdout();
-        execute!(stdout, Clear(ClearType::All))
+    pub fn initialize() -> Result<(), Error> {
+        enable_raw_mode()?;
+        Self::clear_screen()?;
+        Self::move_cursor_to(Position { x: 0, y: 0 })?;
+        Self::execute()?;
+        Ok(())
     }
 
-    pub fn move_cursor_to(x: u16, y: u16) -> Result<(), std::io::Error> {
-        execute!(stdout(), MoveTo(x, y))
+    pub fn clear_screen() -> Result<(), Error> {
+        queue!(stdout(), Clear(ClearType::All))?;
+        Ok(())
     }
 
-    pub fn size() -> Result<(u16, u16), std::io::Error> {
-        size()
+    pub fn clear_line() -> Result<(), Error> {
+        queue!(stdout(), Clear(ClearType::CurrentLine))?;
+        Ok(())
+    }
+
+    pub fn move_cursor_to(pos: Position) -> Result<(), Error> {
+        queue!(stdout(), MoveTo(pos.x, pos.y))?;
+        Ok(())
+    }
+
+    pub fn size() -> Result<Size, Error> {
+        let (width, height) = size()?;
+        Ok(Size { width, height })
+    }
+
+    pub fn hide_cursor() -> Result<(), Error> {
+        queue!(stdout(), Hide)?;
+        Ok(())
+    }
+
+    pub fn show_cursor() -> Result<(), Error> {
+        queue!(stdout(), Show)?;
+        Ok(())
+    }
+
+    pub fn print(str: &str) -> Result<(), Error> {
+        queue!(stdout(), Print(str))?;
+        Ok(())
+    }
+
+    pub fn execute() -> Result<(), Error> {
+        stdout().flush()?;
+        Ok(())
     }
 }
