@@ -22,7 +22,7 @@ pub struct Position {
     pub row: usize,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 pub struct Size {
     pub width: usize,
     pub height: usize,
