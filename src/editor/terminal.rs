@@ -4,7 +4,10 @@ use crossterm::{
     cursor::{Hide, MoveTo, Show},
     queue,
     style::Print,
-    terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
+    terminal::{
+        disable_raw_mode, enable_raw_mode, size, Clear, ClearType, EnterAlternateScreen,
+        LeaveAlternateScreen,
+    },
     Command,
 };
 
@@ -30,6 +33,8 @@ pub struct Size {
 
 impl Terminal {
     pub fn terminate() -> Result<(), Error> {
+        Self::leave_alternate_screen()?;
+        Self::show_caret()?;
         Self::execute()?;
         disable_raw_mode()?;
         Ok(())
@@ -37,6 +42,7 @@ impl Terminal {
 
     pub fn initialize() -> Result<(), Error> {
         enable_raw_mode()?;
+        Self::enter_alternate_screen()?;
         Self::clear_screen()?;
         Self::execute()?;
         Ok(())
@@ -93,6 +99,23 @@ impl Terminal {
 
     pub fn execute() -> Result<(), Error> {
         stdout().flush()?;
+        Ok(())
+    }
+
+    pub fn leave_alternate_screen() -> Result<(), Error> {
+        Self::queue_command(LeaveAlternateScreen)?;
+        Ok(())
+    }
+
+    pub fn enter_alternate_screen() -> Result<(), Error> {
+        Self::queue_command(EnterAlternateScreen)?;
+        Ok(())
+    }
+
+    pub fn print_row(row: usize, line_text: &str) -> Result<(), Error> {
+        Self::move_caret_to(Position { col: 0, row })?;
+        Self::clear_line()?;
+        Self::print(line_text)?;
         Ok(())
     }
 
